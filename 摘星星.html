@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>优衣库×间谍过家家 - 特工任务</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('图3.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            text-align: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #game-area {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .star {
+            position: absolute;
+            font-size: 40px;
+            cursor: pointer;
+            animation: blink 1s infinite alternate;
+            color: #FFD700;
+            text-shadow: 0 0 10px #FFF;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        #timer, #score {
+            position: fixed;
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            z-index: 10;
+        }
+        
+        #timer {
+            top: 10px;
+            left: 10px;
+        }
+        
+        #score {
+            top: 10px;
+            right: 10px;
+        }
+        
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        
+        #start-button {
+            background: #FFD700;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            color: #16213e;
+        }
+        
+        #dialog, #fail-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #16213e;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.7);
+            z-index: 100;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        #dialog h2, #fail-dialog h2 {
+            color: #FFD700;
+            margin-top: 0;
+            font-size: 22px;
+        }
+        
+        #dialog p, #fail-dialog p {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        
+        #dialog button, #fail-dialog button {
+            background: #FFD700;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            color: #16213e;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <h2>优衣库×间谍过家家</h2>
+        <p>点击收集100颗星星完成任务</p>
+        <p>限时60秒</p>
+        <button id="start-button">开始任务</button>
+    </div>
+
+    <div id="game-area"></div>
+    <div id="timer">时间: 60秒</div>
+    <div id="score">积分: 0</div>
+    
+    <div id="dialog">
+        <h2>任务完成！</h2>
+        <p>恭喜获得优衣库×间谍过家家联名周边兑换券</p>
+        <p>兑换码：<strong>SPY0405</strong></p>
+        <p>请截图保存至门店使用</p>
+        <button onclick="restartGame()">再来一次</button>
+    </div>
+
+    <div id="fail-dialog">
+        <h2>任务失败！</h2>
+        <p>还差一点，再试一次吧</p>
+        <button onclick="restartGame()">再来一次</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let gameActive = false;
+        
+        // 初始化游戏
+        function initGame() {
+            document.getElementById('start-button').addEventListener('click', function() {
+                document.getElementById('start-screen').style.display = 'none';
+                startGame();
+            });
+        }
+        
+        function startGame() {
+            gameActive = true;
+            createStar();
+            createStar();
+            createStar(); // 初始3个星星
+            
+            timer = setInterval(updateTimer, 1000);
+        }
+        
+        // 创建星星
+        function createStar() {
+            if (!gameActive) return;
+            
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.innerHTML = '⭐';
+            
+            // 随机位置，确保在可视区域内
+            const x = Math.random() * (window.innerWidth - 60);
+            const y = Math.random() * (window.innerHeight - 60);
+            star.style.left = x + 'px';
+            star.style.top = y + 'px';
+            
+            // 点击事件
+            star.addEventListener('click', function() {
+                if (!gameActive) return;
+                
+                score++;
+                document.getElementById('score').textContent = '积分: ' + score;
+                this.remove();
+                createStar();
+                
+                // 检查胜利条件
+                if (score >= 100) {
+                    winGame();
+                }
+            });
+            
+            document.getElementById('game-area').appendChild(star);
+        }
+        
+        // 更新计时器
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById('timer').textContent = '时间: ' + timeLeft + '秒';
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        // 获胜
+        function winGame() {
+            gameActive = false;
+            clearInterval(timer);
+            document.body.style.background = 'url(\'bg-win.jpg\') no-repeat center center fixed';
+            document.body.style.backgroundSize = 'cover';
+            document.getElementById('dialog').style.display = 'block';
+        }
+        
+        // 时间结束
+        function endGame() {
+            gameActive = false;
+            clearInterval(timer);
+            document.body.style.background = 'url(\'bg-fail.jpg\') no-repeat center center fixed';
+            document.body.style.backgroundSize = 'cover';
+            document.getElementById('fail-dialog').style.display = 'block';
+        }
+        
+        // 重新开始
+        function restartGame() {
+            score = 0;
+            timeLeft = 60;
+            gameActive = false;
+            
+            document.getElementById('score').textContent = '积分: 0';
+            document.getElementById('timer').textContent = '时间: 60秒';
+            document.getElementById('dialog').style.display = 'none';
+            document.getElementById('fail-dialog').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            document.body.style.background = 'url(\'bg-game.jpg\') no-repeat center center fixed';
+            document.body.style.backgroundSize = 'cover';
+            
+            // 清除所有星星
+            document.querySelectorAll('.star').forEach(star => star.remove());
+        }
+        
+        // 启动游戏
+        window.onload = initGame;
+        
+        // 防止触摸事件导致页面缩放
+        document.addEventListener('touchmove', function(e) {
+            if (gameActive) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
